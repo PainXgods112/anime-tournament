@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anime Multiverse Tournament</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 20px;
+    background: #09090f;
+    color: white;
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+
+h1 {
+    color: #ff3030;
+    font-size: 27px;
+    text-shadow: 0 0 12px #ff0000;
+}
+
+.subtitle {
+    color: #aaa;
+    margin-bottom: 25px;
+}
+
+.round-title {
+    color: #ff4545;
+    margin-top: 30px;
+    font-size: 22px;
+}
+
+.battle {
+    background: #15151f;
+    border: 1px solid #383848;
+    border-radius: 14px;
+    padding: 15px;
+    margin: 15px auto;
+    max-width: 400px;
+}
+
+.fighter {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    margin: 10px 0;
+    background: #242433;
+    color: white;
+    border: 1px solid #555;
+    border-radius: 10px;
+    font-size: 17px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.fighter:hover {
+    background: #a51f35;
+}
+
+.fighter:disabled {
+    cursor: default;
+    opacity: 0.55;
+}
+
+.fighter.winner {
+    background: #145c37;
+    border-color: #36ff91;
+    opacity: 1;
+}
+
+.vs {
+    color: #ff4141;
+    font-weight: bold;
+}
+
+#champion {
+    display: none;
+    margin: 30px auto;
+    padding: 25px 12px;
+    max-width: 400px;
+    border: 2px solid gold;
+    border-radius: 15px;
+    background: #28200b;
+}
+
+#champion h2 {
+    color: gold;
+    font-size: 25px;
+}
+
+#championName {
+    font-size: 30px;
+    font-weight: bold;
+}
+
+.reset {
+    background: #e52b42;
+    color: white;
+    border: none;
+    border-radius: 9px;
+    padding: 12px 22px;
+    font-size: 16px;
+    margin: 20px;
+    cursor: pointer;
+}
+
+footer {
+    color: #777;
+    margin-top: 30px;
+    font-size: 12px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>⚔️ ANIME MULTIVERSE ⚔️</h1>
+<div class="subtitle">16 Warriors • One Champion 👑</div>
+
+<div id="tournament"></div>
+
+<div id="champion">
+    <h2>👑 TOURNAMENT CHAMPION 👑</h2>
+    <div id="championName"></div>
+    <p>The strongest warrior in your tournament!</p>
+</div>
+
+<button class="reset" onclick="resetTournament()">
+    🔄 Restart Tournament
+</button>
+
+<footer>Created for anime fans 🔥</footer>
+
+<script>
+const originalFighters = [
+    "🖤 Asta",
+    "⚔️ Roronoa Zoro",
+    "🏴‍☠️ Monkey D. Luffy",
+    "🍥 Naruto Uzumaki",
+    "⚔️ Ichigo Kurosaki",
+    "🔵 Satoru Gojo",
+    "🐉 Goku",
+    "🖤 Sung Jin-Woo",
+    "👁️ Madara Uchiha",
+    "👑 Rimuru Tempest",
+    "👊 Saitama",
+    "🔥 Tanjiro Kamado",
+    "⚡ Kakashi Hatake",
+    "🕊️ Eren Yeager",
+    "💥 Vegeta",
+    "👹 Ryomen Sukuna"
+];
+
+let rounds = [];
+let winners = {};
+
+function initialize() {
+    rounds = [originalFighters.slice()];
+
+    for (let i = 1; i < 5; i++) {
+        rounds.push([]);
+    }
+
+    winners = {};
+    render();
+}
+
+function render() {
+    const tournament = document.getElementById("tournament");
+    tournament.innerHTML = "";
+
+    const titles = [
+        "🔥 ROUND OF 16",
+        "⚔️ QUARTER-FINALS",
+        "💀 SEMI-FINALS",
+        "👑 GRAND FINAL"
+    ];
+
+    for (let r = 0; r < 4; r++) {
+        const fighters = rounds[r];
+
+        const title = document.createElement("h2");
+        title.className = "round-title";
+        title.textContent = titles[r];
+        tournament.appendChild(title);
+
+        for (let i = 0; i < fighters.length; i += 2) {
+            const battleId = r + "-" + i;
+            const card = document.createElement("div");
+            card.className = "battle";
+
+            const a = fighters[i];
+            const b = fighters[i + 1];
+
+            if (!b) {
+                const waiting = document.createElement("p");
+                waiting.textContent = "Waiting for winners...";
+                card.appendChild(waiting);
+                tournament.appendChild(card);
+                continue;
+            }
+
+            const label = document.createElement("p");
+            label.textContent = "BATTLE " + (i / 2 + 1);
+            card.appendChild(label);
+
+            [a, b].forEach(fighter => {
+                const button = document.createElement("button");
+                button.className = "fighter";
+                button.textContent = fighter;
+
+                if (winners[battleId] === fighter) {
+                    button.classList.add("winner");
+                }
+
+                button.disabled = Boolean(winners[battleId]);
+
+                button.onclick = () => selectWinner(
+                    r, i, fighter
+                );
+
+                card.appendChild(button);
+
+                if (fighter === a) {
+                    const vs = document.createElement("div");
+                    vs.className = "vs";
+                    vs.textContent = "VS";
+                    card.appendChild(vs);
+                }
+            });
+
+            tournament.appendChild(card);
+        }
+    }
+
+    const totalDecided = Object.keys(winners).length;
+
+    const status = document.createElement("p");
+    status.style.color = "#aaa";
+    status.textContent =
+        "🏆 Battles completed: " + totalDecided + " / 15";
+
+    tournament.prepend(status);
+
+    const champion = winners["3-0"];
+
+    document.getElementById("champion").style.display =
+        champion ? "block" : "none";
+
+    if (champion) {
+        document.getElementById("championName").textContent =
+            champion;
+    }
+}
+
+function selectWinner(round, index, fighter) {
+    const battleId = round + "-" + index;
+
+    if (winners[battleId]) return;
+
+    winners[battleId] = fighter;
+
+    const nextRound = round + 1;
+
+    if (nextRound < 4) {
+        const nextIndex = Math.floor(index / 2);
+        const nextSlot = index % 4 === 0 ? 0 : 1;
+
+        if (!rounds[nextRound][nextIndex * 2]) {
+            rounds[nextRound][nextIndex * 2] = "";
+        }
+
+        rounds[nextRound][nextIndex * 2 + nextSlot] =
+            fighter;
+
+        // Clear the later rounds when a result changes.
+        for (let r = nextRound + 1; r < 4; r++) {
+            rounds[r] = [];
+        }
+
+        for (const key of Object.keys(winners)) {
+            const parts = key.split("-").map(Number);
+            if (parts[0] > round) {
+                delete winners[key];
+            }
+        }
+    }
+
+    render();
+}
+
+function resetTournament() {
+    if (confirm("Restart the entire tournament?")) {
+        initialize();
+    }
+}
+
+initialize();
+</script>
+
+</body>
+</html>
